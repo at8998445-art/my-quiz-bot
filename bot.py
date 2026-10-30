@@ -2,7 +2,8 @@ import sqlite3
 from telegram import Update, Poll
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, PollAnswerHandler, MessageHandler, filters
 
-TOKEN = "os.environ.get("TOKEN")"  # BotFather က ရထားတဲ့ Token ကို ထည့်ပါ
+import os
+TOKEN = os.environ.get("TOKEN")
 
 # ----------------- DATABASE SETUP -----------------
 def init_db():
