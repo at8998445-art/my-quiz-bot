@@ -32,7 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # ယခုနှစ်၏ မည်သည့်ရက်မြောက်ဖြစ်ကြောင်း တွက်ချက်ပြီး မေးခွန်းအညွှန်း (Index) ကို ရှာမည်
-    day_of_year = datetime.datetime.now().timetuple().yday
+    day_of_year = datetime.datetime.now().timetuple().tm_yday
     # မေးခွန်း ၁၀၀ အတွင်း အဝိုင်းလည်နေစေရန်
     q_index = (day_of_year - 1) % len(questions)
     q_data = questions[q_index]
