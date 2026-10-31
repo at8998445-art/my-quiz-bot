@@ -6,10 +6,18 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 TOKEN = os.environ.get("TOKEN")
 
-# JSON ဖိုင်မှ မေးခွန်းများကို ဖတ်ရှုရန်
+# JSON ဖိုင်မှ မေးခွန်းများကို တိကျသော လမ်းကြောင်းဖြင့် ဖတ်ရှုရန်
 def load_questions():
     try:
-        with open("questions.json", "r", encoding="utf-8") as f:
+        # လက်ရှိ script ရှိရာ ဖိုင်တွဲထဲမှ questions.json ကို ရှာမည်
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_dir, "questions.json")
+        
+        if not os.path.exists(file_path):
+            print(f"Error: {file_path} not found!")
+            return []
+
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             return data.get("questions", [])
     except Exception as e:
@@ -20,7 +28,7 @@ def load_questions():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     questions = load_questions()
     if not questions:
-        await update.message.reply_text("မေးခွန်းများ ရှာမတွေ့ပါ။")
+        await update.message.reply_text("မေးခွန်းများ ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ questions.json ဖိုင်ကို စစ်ဆေးပါ။")
         return
 
     # ယခုနှစ်၏ မည်သည့်ရက်မြောက်ဖြစ်ကြောင်း တွက်ချက်ပြီး မေးခွန်းအညွှန်း (Index) ကို ရှာမည်
