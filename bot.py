@@ -1,10 +1,25 @@
 import os
 import json
 import datetime
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 TOKEN = os.environ.get("TOKEN")
+PORT = int(os.environ.get("PORT", 10000))
+
+# Render က Port တောင်းဆိုမှုကို ဖြေရှင်းရန်အတွက် Dummy Web Server တစ်ခု
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive and running!")
+
+def run_web_server():
+    server_address = ('0.0.0.0', PORT)
+    httpd = HTTPServer(server_address, SimpleHandler)
+    httpd.serve_forever()
 
 def load_questions():
     try:
@@ -22,7 +37,6 @@ def load_questions():
         print(f"Error loading questions: {e}")
         return []
 
-# /start နှိပ်တဲ့အခါ Quiz ပုံစံဖြင့် မေးခွန်းထုတ်ပေးရန်
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     questions = load_questions()
     if not questions:
@@ -35,20 +49,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     question_text = f"📅 နေ့စဥ် မေးခွန်း\n\n{q_data['question']}"
     
-    # Telegram Quiz Poll (သူတို့ရွေးပြီးမှ မှန်/မှား သိရမည်၊ အမည်ဖော်ပြမည်)
     await context.bot.send_poll(
         chat_id=update.effective_chat.id,
         question=question_text,
         options=q_data['options'],
         type="quiz",
         correct_option_id=q_data['answer'],
-        is_anonymous=False  # ဘယ်သူတွေ ဖြေထားတယ်ဆိုတာကို သိနိုင်ရန်
+        is_anonymous=False
     )
 
 def main():
     if not TOKEN:
         print("Error: TOKEN environment variable not set.")
         return
+
+    # Web server ကို သီးသန့် Thread ဖြင့် စတင် Run မည် (Render Port သတ်မှတ်ချက်အတွက်)
+    server_thread = threading.Thread(target=run_web_server, daemon=True)
+    server_thread.start()
 
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
